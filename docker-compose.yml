@@ -1,0 +1,47 @@
+version: "3"
+services:
+  postgres:
+    container_name: idea-offshore-job-search-postgres
+    image: postgres:12-bullseye
+    ports:
+    - "5432:5432"
+    volumes:
+    - ./data/postgres:/var/lib/postgresql/data
+    env_file:
+    - docker.env
+    networks:
+    - postgres
+  pgadmin:
+    links:
+    - postgres:postgres
+    container_name: idea-offshore-job-search-pgadmin
+    image: dpage/pgadmin4
+    ports:
+    - "8080:80"
+    volumes:
+    - ./data/pgadmin:/root/.pgadmin
+    env_file:
+    - docker.env
+    networks:
+    - postgres
+  redis:
+    image: redis:latest
+    container_name: idea-offshore-job-search-redis-container
+    volumes:
+    - ./data/redis-data:/data
+    privileged: true
+    ports:
+      - "6380:6379" # Map container's Redis port to host machine's port
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: idea-offshore-job-search-redis-commander
+    environment:
+      - REDIS_PORT=6379 # The host and port of your Redis server
+      - REDIS_HOST=redis # The host and port of your Redis server
+    ports:
+      - "8081:8081" # Map container's Redis Commander port to host machine's port
+    depends_on:
+      - redis
+networks:
+  postgres:
+    driver: bridge
