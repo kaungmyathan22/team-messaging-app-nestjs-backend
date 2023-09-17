@@ -110,4 +110,8 @@ export class AuthenticationService {
     );
     return this.cacheService.del(`${userKey}:${user.id}`);
   }
+
+  deleteMyAccount(user: UserEntity) {
+    return this.userService.deleteUser(user);
+  }
 }

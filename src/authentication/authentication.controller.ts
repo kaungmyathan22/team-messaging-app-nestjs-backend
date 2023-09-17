@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -40,6 +41,18 @@ export class AuthenticationController {
       ),
     ]);
     return result;
+  }
+
+  @UseGuards(JwtAuthenticationGuard)
+  @Delete('delete-account')
+  @HttpCode(HttpStatus.OK)
+  async deleteMyAccount(@Req() req: Request) {
+    req.res.setHeader(
+      'Set-Cookie',
+      this.authenticationService.getCookieForLogOut(),
+    );
+    this.authenticationService.logout(req.user as UserEntity);
+    return this.authenticationService.deleteMyAccount(req.user as UserEntity);
   }
 
   @UseGuards(JwtAuthenticationGuard)

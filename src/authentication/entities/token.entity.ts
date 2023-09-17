@@ -16,7 +16,7 @@ export class RefreshTokenEntity {
   @Column()
   refreshTokenHash: string;
 
-  @OneToOne(() => UserEntity)
+  @OneToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: UserEntity;
 
