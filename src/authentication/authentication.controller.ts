@@ -95,14 +95,10 @@ export class AuthenticationController {
     @Req() req: Request,
     @Body() payload: ChangePasswordDTO,
   ) {
-    // const access_token = this.authenticationService.getAccessToken(
-    //   req.user as UserEntity,
-    // );
-    // const accessTokenCookie =
-    //   this.authenticationService.getCookieWithJwtToken(access_token);
-
-    // req.res.setHeader('Set-Cookie', accessTokenCookie);
-    // return { access_token };
+    req.res.setHeader(
+      'Set-Cookie',
+      this.authenticationService.getCookieForLogOut(),
+    );
     return this.authenticationService.changePassword(
       req.user as UserEntity,
       payload,

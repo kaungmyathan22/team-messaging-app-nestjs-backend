@@ -146,6 +146,8 @@ export class AuthenticationService {
     }
     // 3. change password
     await this.userService.updatePassword(newPassword, user);
+    // log the user out.
+    await this.logout(user);
     return { success: true };
   }
 
