@@ -42,6 +42,7 @@ export class AuthenticationService {
     const jwt_access_expiration_time = this.configService.get<number>(
       EnvironmentConstants.JWT_EXPIRES_IN,
     );
+    console.log({ jwt_access_expiration_time });
     const cacheKey = this.configService.get(
       EnvironmentConstants.USER_TOKEN_CACHE_KEY,
     );
