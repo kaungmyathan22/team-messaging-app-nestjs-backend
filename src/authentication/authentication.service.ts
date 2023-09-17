@@ -1,9 +1,16 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
 import { Cache } from 'cache-manager';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
+import { ChangePasswordDTO } from 'src/users/dto/change-password.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { RegisterDTO } from './dto/register.dto';
@@ -111,7 +118,38 @@ export class AuthenticationService {
     return this.cacheService.del(`${userKey}:${user.id}`);
   }
 
-  deleteMyAccount(user: UserEntity) {
-    return this.userService.deleteUser(user);
+  async deleteMyAccount(user: UserEntity) {
+    await this.userService.deleteUser(user);
+    return { success: true };
+  }
+
+  async changePassword(user: UserEntity, payload: ChangePasswordDTO) {
+    const { newPassword, oldPassword } = payload;
+    // 1. old password must correct
+    const isOldPasswordCorrect = await bcrypt.compare(
+      oldPassword,
+      user.password,
+    );
+    if (!isOldPasswordCorrect) {
+      throw new BadRequestException('Incorrect old password.');
+    }
+
+    // 2. new password shouldn't be the same with old password
+    const isMatchWithOldPassword = await bcrypt.compare(
+      newPassword,
+      user.password,
+    );
+    if (isMatchWithOldPassword) {
+      throw new BadRequestException(
+        "New password can't be the same with the old password. Please choose different one.",
+      );
+    }
+    // 3. change password
+    await this.userService.updatePassword(newPassword, user);
+    return { success: true };
+  }
+
+  resetPassword(user: UserEntity) {
+    throw new NotImplementedException('need to implmeents this.');
   }
 }

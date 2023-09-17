@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ChangePasswordDTO } from 'src/users/dto/change-password.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthenticationService } from './authentication.service';
 import { RegisterDTO } from './dto/register.dto';
@@ -85,5 +86,26 @@ export class AuthenticationController {
 
     req.res.setHeader('Set-Cookie', accessTokenCookie);
     return { access_token };
+  }
+
+  @UseGuards(JwtAuthenticationGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('change-password')
+  async changePassword(
+    @Req() req: Request,
+    @Body() payload: ChangePasswordDTO,
+  ) {
+    // const access_token = this.authenticationService.getAccessToken(
+    //   req.user as UserEntity,
+    // );
+    // const accessTokenCookie =
+    //   this.authenticationService.getCookieWithJwtToken(access_token);
+
+    // req.res.setHeader('Set-Cookie', accessTokenCookie);
+    // return { access_token };
+    return this.authenticationService.changePassword(
+      req.user as UserEntity,
+      payload,
+    );
   }
 }

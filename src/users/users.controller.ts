@@ -6,12 +6,16 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { AuthenticateDTO } from './dto/authenticate.dto';
+import JwtAuthenticationGuard from 'src/authentication/guards/jwt.guard';
+import { CurrentUser } from 'src/common/decorators/current-user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
 
 @Controller('api/v1/users')
@@ -23,12 +27,6 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Post('authenticate')
-  @HttpCode(HttpStatus.OK)
-  authenticate(@Body() authenticateDTO: AuthenticateDTO) {
-    return this.usersService.authenticate(authenticateDTO);
-  }
-
   @Get()
   findAll() {
     return this.usersService.findAll();
@@ -38,10 +36,21 @@ export class UsersController {
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
+  @UseGuards(JwtAuthenticationGuard)
+  @Patch('my-profile')
+  updateMyProfile(
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: UserEntity,
+  ) {
+    return this.usersService.update(user.id, updateUserDto);
+  }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')

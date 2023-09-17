@@ -88,10 +88,9 @@ export class UsersService {
     const user_to_delete = await this.findOne(user.id);
     return await this.userRepository.delete(user_to_delete.id);
   }
-  // async changePassword(payload: ChangePasswordDTO) {
-  //   const user = await this.findByEmail(payload.email);
-  //   if (await user.isPasswordMatch(payload.password)) {
-  //     return user;
-  //   }
-  // }
+
+  async updatePassword(newPassword: string, user: UserEntity) {
+    user.password = newPassword;
+    return this.userRepository.save(user);
+  }
 }

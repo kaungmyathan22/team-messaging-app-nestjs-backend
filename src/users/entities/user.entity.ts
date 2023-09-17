@@ -13,6 +13,9 @@ export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true })
+  bio: string;
+
   @Column({ unique: true })
   email: string;
 
