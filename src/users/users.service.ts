@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EmailService } from 'src/email/email.service';
 import { Repository } from 'typeorm';
 import { AuthenticateDTO } from './dto/authenticate.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -11,11 +12,18 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    private readonly emailService: EmailService,
   ) {}
   async create(createUserDto: CreateUserDto) {
     try {
       const user = await this.userRepository.create(createUserDto);
       await this.userRepository.save(user);
+      // this.emailService.sendEmail({
+      //   from: '',
+      //   to: user.email,
+      //   subject: 'Email Confirmation',
+      //   html: '<strong>This is bold text</strong>',
+      // });
       return user;
     } catch (error) {
       if (error.code === '23505') {

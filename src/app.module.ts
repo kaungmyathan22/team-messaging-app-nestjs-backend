@@ -8,11 +8,13 @@ import { AppService } from './app.service';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { CookieMiddleware } from './common/middlewares/cookie.middleware';
 import { DatabaseModule } from './database/database.module';
+import { EmailModule } from './email/email.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       validationSchema: joi.object({
         POSTGRES_USER: joi.string().required(),
         POSTGRES_PASSWORD: joi.string().required(),
@@ -52,6 +54,7 @@ import { UsersModule } from './users/users.module';
         };
       },
     }),
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

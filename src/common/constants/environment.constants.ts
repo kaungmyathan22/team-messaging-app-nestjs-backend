@@ -1,4 +1,5 @@
 export class EnvironmentConstants {
+  static NODE_ENV = 'NODE_ENV';
   static POSTGRES_HOST = 'POSTGRES_HOST';
   static POSTGRES_PORT = 'POSTGRES_PORT';
   static POSTGRES_USER = 'POSTGRES_USER';
