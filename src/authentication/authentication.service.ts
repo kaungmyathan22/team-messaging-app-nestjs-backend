@@ -56,7 +56,6 @@ export class AuthenticationService {
     const jwt_access_expiration_time = this.configService.get<number>(
       EnvironmentConstants.JWT_EXPIRES_IN,
     );
-    console.log({ jwt_access_expiration_time });
     const cacheKey = this.configService.get(
       EnvironmentConstants.USER_TOKEN_CACHE_KEY,
     );
@@ -183,7 +182,7 @@ export class AuthenticationService {
           });
       resetTokenInstance.code = code;
       resetTokenInstance.expiresAt = new Date(
-        now.setMinutes(now.getMinutes() + 60),
+        now.setHours(now.getHours() + 24),
       );
       const token = this.jwtService.sign(
         { email: user.email, code },
@@ -216,7 +215,6 @@ export class AuthenticationService {
 
   async resetPassword({ newPassword, token }: ResetPasswordDTO) {
     try {
-      console.log('hii');
       const { code, email } = await this.jwtService.verify(token, {
         secret: this.configService.get(
           EnvironmentConstants.PASSWORD_RESET_TOKEN_SECRET,
@@ -234,12 +232,14 @@ export class AuthenticationService {
       if (!resetTokenInstance) {
         throw new Error();
       }
+      if (resetTokenInstance.expiresAt < new Date()) {
+        throw new Error();
+      }
       await Promise.all([
         this.userService.updatePassword(newPassword, user),
         this.passwordResetTokenRepository.remove(resetTokenInstance),
       ]);
-
-      return { success: true };
+      return { success: true, resetTokenInstance };
     } catch (error) {
       console.log(error);
       throw new UnauthorizedException('Passwrod reset link expired');
