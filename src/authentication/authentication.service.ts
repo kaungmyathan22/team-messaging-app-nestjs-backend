@@ -1,29 +1,43 @@
+import { InjectQueue } from '@nestjs/bull';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   BadRequestException,
   Inject,
   Injectable,
-  NotImplementedException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
+import { Queue } from 'bull';
 import { Cache } from 'cache-manager';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
+import { QueueConstants } from 'src/common/constants/queue.constants';
+import { EmailService } from 'src/email/email.service';
 import { ChangePasswordDTO } from 'src/users/dto/change-password.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { StringUtils } from 'src/utils/string';
+import { Repository } from 'typeorm';
+import { ForgotPasswordDTO } from './dto/fogot-password.dto';
 import { RegisterDTO } from './dto/register.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
+import { PasswordResetTokenEntity } from './entities/password-reset-token.entity';
 import { RefreshTokenService } from './refresh-token.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
+    private emailService: EmailService,
     private userService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private refreshTokenService: RefreshTokenService,
+    @InjectQueue(QueueConstants.emailQueue) private emailQueue: Queue,
+    @InjectRepository(PasswordResetTokenEntity)
+    private passwordResetTokenRepository: Repository<PasswordResetTokenEntity>,
   ) {}
 
   authenticate(email: string, password: string) {
@@ -152,7 +166,83 @@ export class AuthenticationService {
     return { success: true };
   }
 
-  resetPassword(user: UserEntity) {
-    throw new NotImplementedException('need to implmeents this.');
+  async forgotPassword(payload: ForgotPasswordDTO) {
+    const { email } = payload;
+    const user = await this.userService.findByEmail(email);
+    if (user) {
+      const code = StringUtils.generateRandomString(20);
+      const now = new Date();
+      const existingResetTokenInstance =
+        await this.passwordResetTokenRepository.findOne({
+          where: { user: { id: user.id } },
+        });
+      const resetTokenInstance = existingResetTokenInstance
+        ? existingResetTokenInstance
+        : this.passwordResetTokenRepository.create({
+            user,
+          });
+      resetTokenInstance.code = code;
+      resetTokenInstance.expiresAt = new Date(
+        now.setMinutes(now.getMinutes() + 60),
+      );
+      const token = this.jwtService.sign(
+        { email: user.email, code },
+        {
+          secret: this.configService.get(
+            EnvironmentConstants.PASSWORD_RESET_TOKEN_SECRET,
+          ),
+          expiresIn: +this.configService.get(
+            EnvironmentConstants.PASSWORD_RESET_TOKEN_EXPIRES_IN,
+          ),
+        },
+      );
+      const frontendURL = this.configService.get(
+        EnvironmentConstants.FRONTNED_URL,
+      );
+      await Promise.all([
+        this.passwordResetTokenRepository.save(resetTokenInstance),
+        this.emailService.sendEmail({
+          to: 'hello@gmail.com',
+          template: 'forgot-password',
+          subject: 'Password Reset Link',
+          context: {
+            resetLink: `${frontendURL}/?token=${token}`,
+          },
+        }),
+      ]);
+    }
+    return { success: true };
+  }
+
+  async resetPassword({ newPassword, token }: ResetPasswordDTO) {
+    try {
+      console.log('hii');
+      const { code, email } = await this.jwtService.verify(token, {
+        secret: this.configService.get(
+          EnvironmentConstants.PASSWORD_RESET_TOKEN_SECRET,
+        ),
+      });
+      const [user, resetTokenInstance] = await Promise.all([
+        this.userService.findByEmail(email),
+        this.passwordResetTokenRepository.findOne({
+          where: {
+            code,
+            user: { email },
+          },
+        }),
+      ]);
+      if (!resetTokenInstance) {
+        throw new Error();
+      }
+      await Promise.all([
+        this.userService.updatePassword(newPassword, user),
+        this.passwordResetTokenRepository.remove(resetTokenInstance),
+      ]);
+
+      return { success: true };
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException('Passwrod reset link expired');
+    }
   }
 }

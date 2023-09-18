@@ -14,7 +14,6 @@ export class EmailService {
   }
 
   async _sendDevelopmentEmail({
-    from,
     to,
     subject,
     template,
@@ -23,7 +22,7 @@ export class EmailService {
     try {
       await this.mailerService.sendMail({
         to,
-        from,
+        from: 'no-reply@idea.com',
         subject,
         template: `./${template}`,
         context,

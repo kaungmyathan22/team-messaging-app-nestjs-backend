@@ -5,7 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { MoreThanOrEqual, Repository } from 'typeorm';
-import { RefreshTokenEntity } from './entities/token.entity';
+import { RefreshTokenEntity } from './entities/refresh-token.entity';
 
 @Injectable()
 export class RefreshTokenService {

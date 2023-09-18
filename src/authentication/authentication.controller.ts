@@ -13,7 +13,9 @@ import { Request } from 'express';
 import { ChangePasswordDTO } from 'src/users/dto/change-password.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthenticationService } from './authentication.service';
+import { ForgotPasswordDTO } from './dto/fogot-password.dto';
 import { RegisterDTO } from './dto/register.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 import JwtRefreshAuthenticationGuard from './guards/jwt-refresh.guard';
 import JwtAuthenticationGuard from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local.guard';
@@ -103,5 +105,17 @@ export class AuthenticationController {
       req.user as UserEntity,
       payload,
     );
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() payload: ForgotPasswordDTO) {
+    return this.authenticationService.forgotPassword(payload);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() payload: ResetPasswordDTO) {
+    return this.authenticationService.resetPassword(payload);
   }
 }

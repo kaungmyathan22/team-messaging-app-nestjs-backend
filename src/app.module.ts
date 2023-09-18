@@ -9,6 +9,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { CookieMiddleware } from './common/middlewares/cookie.middleware';
 import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './email/email.module';
+import { QueueModule } from './queue/queue.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -55,6 +56,7 @@ import { UsersModule } from './users/users.module';
       },
     }),
     EmailModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

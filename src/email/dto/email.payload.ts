@@ -1,5 +1,4 @@
 export class EmailPayload {
-  from: string;
   to: string;
   subject: string;
   template: string;

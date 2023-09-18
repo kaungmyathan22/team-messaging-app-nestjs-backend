@@ -7,7 +7,6 @@ export class EmailController {
   @Get('')
   sendEmail() {
     return this.emailService.sendEmail({
-      from: 'test@local.com',
       to: 'test@gmail.com',
       subject: 'Email Confirmation',
       template: 'confirmation',
