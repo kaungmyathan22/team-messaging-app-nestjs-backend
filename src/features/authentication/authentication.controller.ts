@@ -12,17 +12,23 @@ import {
 import { Request } from 'express';
 import { ChangePasswordDTO } from 'src/features/users/dto/change-password.dto';
 import { UserEntity } from 'src/features/users/entities/user.entity';
-import { AuthenticationService } from './authentication.service';
 import { ForgotPasswordDTO } from './dto/fogot-password.dto';
 import { RegisterDTO } from './dto/register.dto';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
 import JwtRefreshAuthenticationGuard from './guards/jwt-refresh.guard';
 import JwtAuthenticationGuard from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local.guard';
+import { AuthenticationService } from './services/authentication.service';
+import { CookieService } from './services/cookie.service';
+import { TokenService } from './services/token.service';
 
 @Controller('api/v1/authentication')
 export class AuthenticationController {
-  constructor(private readonly authenticationService: AuthenticationService) {}
+  constructor(
+    private readonly authenticationService: AuthenticationService,
+    private readonly cookieService: CookieService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.OK)
@@ -34,26 +40,24 @@ export class AuthenticationController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Req() req: Request) {
-    const result = await this.authenticationService.login(
-      req.user as UserEntity,
-    );
+    const user = req.user;
+    // access_token
+    const access_token = this.tokenService.getAccessToken(req.user);
+    // refresh_token
+    const refresh_token = await this.tokenService.getRefreshToken(req.user);
+
     req.res.setHeader('Set-Cookie', [
-      this.authenticationService.getCookieWithJwtToken(result.access_token),
-      this.authenticationService.getCookieWithJwtRefreshToken(
-        result.refresh_token,
-      ),
+      this.cookieService.getCookieWithJwtToken(access_token),
+      this.cookieService.getCookieWithJwtRefreshToken(refresh_token),
     ]);
-    return result;
+    return { user, access_token, refresh_token };
   }
 
   @UseGuards(JwtAuthenticationGuard)
   @Delete('delete-account')
   @HttpCode(HttpStatus.OK)
   async deleteMyAccount(@Req() req: Request) {
-    req.res.setHeader(
-      'Set-Cookie',
-      this.authenticationService.getCookieForLogOut(),
-    );
+    req.res.setHeader('Set-Cookie', this.cookieService.getCookieForLogOut());
     this.authenticationService.logout(req.user as UserEntity);
     return this.authenticationService.deleteMyAccount(req.user as UserEntity);
   }
@@ -68,10 +72,7 @@ export class AuthenticationController {
   @HttpCode(HttpStatus.OK)
   @Post('logout')
   async logOut(@Req() req: Request) {
-    req.res.setHeader(
-      'Set-Cookie',
-      this.authenticationService.getCookieForLogOut(),
-    );
+    req.res.setHeader('Set-Cookie', this.cookieService.getCookieForLogOut());
     this.authenticationService.logout(req.user as UserEntity);
     return { success: true };
   }
@@ -80,11 +81,11 @@ export class AuthenticationController {
   @HttpCode(HttpStatus.OK)
   @Get('refresh')
   async refresh(@Req() req: Request) {
-    const access_token = this.authenticationService.getAccessToken(
+    const access_token = this.tokenService.getAccessToken(
       req.user as UserEntity,
     );
     const accessTokenCookie =
-      this.authenticationService.getCookieWithJwtToken(access_token);
+      this.cookieService.getCookieWithJwtToken(access_token);
 
     req.res.setHeader('Set-Cookie', accessTokenCookie);
     return { access_token };
@@ -97,10 +98,7 @@ export class AuthenticationController {
     @Req() req: Request,
     @Body() payload: ChangePasswordDTO,
   ) {
-    req.res.setHeader(
-      'Set-Cookie',
-      this.authenticationService.getCookieForLogOut(),
-    );
+    req.res.setHeader('Set-Cookie', this.cookieService.getCookieForLogOut());
     return this.authenticationService.changePassword(
       req.user as UserEntity,
       payload,

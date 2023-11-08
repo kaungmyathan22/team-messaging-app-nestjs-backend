@@ -2,22 +2,22 @@ import { UserEntity } from 'src/features/users/entities/user.entity';
 import {
   Column,
   Entity,
-  JoinColumn,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
-enum VerificationCodeEnum {
+export enum VerificationCodeEnum {
   PASSWORD_RESET = 'PASSWORD_RESET',
   EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
 }
 
 @Entity()
+@Unique('verification_entity_unique_together', ['user', 'code', 'type'])
 export class VerificationCodeEntity {
   @PrimaryGeneratedColumn()
   id: number;
-  @OneToOne(() => UserEntity, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @ManyToOne(() => UserEntity)
   user: UserEntity;
   @Column()
   code: string;

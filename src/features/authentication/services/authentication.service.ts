@@ -1,4 +1,3 @@
-import { InjectQueue } from '@nestjs/bull';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   BadRequestException,
@@ -10,21 +9,19 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
-import { Queue } from 'bull';
+
 import { Cache } from 'cache-manager';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
-import { QueueConstants } from 'src/common/constants/queue.constants';
 import { EmailService } from 'src/features/email/email.service';
 import { ChangePasswordDTO } from 'src/features/users/dto/change-password.dto';
 import { UserEntity } from 'src/features/users/entities/user.entity';
 import { UsersService } from 'src/features/users/users.service';
 import { StringUtils } from 'src/utils/string';
 import { Repository } from 'typeorm';
-import { ForgotPasswordDTO } from './dto/fogot-password.dto';
-import { RegisterDTO } from './dto/register.dto';
-import { ResetPasswordDTO } from './dto/reset-password.dto';
-import { PasswordResetTokenEntity } from './entities/password-reset-token.entity';
-import { RefreshTokenService } from './refresh-token.service';
+import { ForgotPasswordDTO } from '../dto/fogot-password.dto';
+import { RegisterDTO } from '../dto/register.dto';
+import { ResetPasswordDTO } from '../dto/reset-password.dto';
+import { PasswordResetTokenEntity } from '../entities/password-reset-token.entity';
 
 @Injectable()
 export class AuthenticationService {
@@ -34,8 +31,7 @@ export class AuthenticationService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private refreshTokenService: RefreshTokenService,
-    @InjectQueue(QueueConstants.emailQueue) private emailQueue: Queue,
+    // @InjectQueue(QueueConstants.AuthEmailQueue) private emailQueue: Queue,
     @InjectRepository(PasswordResetTokenEntity)
     private passwordResetTokenRepository: Repository<PasswordResetTokenEntity>,
   ) {}
@@ -46,83 +42,12 @@ export class AuthenticationService {
       password,
     });
   }
+  // this.bullService.
+  async register(payload: RegisterDTO) {
+    const user = await this.userService.create(payload);
 
-  register(payload: RegisterDTO) {
-    return this.userService.create(payload);
-  }
-
-  getAccessToken(user: UserEntity) {
-    const access_token = this.jwtService.sign({ id: user.id });
-    const jwt_access_expiration_time = this.configService.get<number>(
-      EnvironmentConstants.JWT_EXPIRES_IN,
-    );
-    const cacheKey = this.configService.get(
-      EnvironmentConstants.USER_TOKEN_CACHE_KEY,
-    );
-    this.cacheService.set(`${cacheKey}:${user.id}`, access_token, {
-      ttl: jwt_access_expiration_time,
-    } as any);
-    return access_token;
-  }
-
-  async getRefreshToken(user: UserEntity) {
-    const refresh_token = this.jwtService.sign(
-      { id: user.id },
-      {
-        secret: this.configService.get(EnvironmentConstants.JWT_REFRESH_SECRET),
-        expiresIn: this.configService.get(
-          EnvironmentConstants.JWT_REFRESH_EXPIRES_IN,
-        ),
-      },
-    );
-    await this.refreshTokenService.upsertToken(refresh_token, user);
-    return refresh_token;
-  }
-
-  async login(user: UserEntity) {
-    // access_token
-    const access_token = this.getAccessToken(user);
-    // refresh_token
-    const refresh_token = await this.getRefreshToken(user);
-    return {
-      user,
-      access_token,
-      refresh_token,
-    };
-  }
-
-  getCookieWithJwtToken(token: string) {
-    const cookieJwtKey = this.configService.get(
-      EnvironmentConstants.COOKIE_JWT_KEY,
-    );
-    const cookieJwtExpiresIn = +this.configService.get(
-      EnvironmentConstants.JWT_EXPIRES_IN,
-    );
-    return `${cookieJwtKey}=${token}; HttpOnly; Path=/; Max-Age=${cookieJwtExpiresIn}`;
-  }
-
-  getCookieWithJwtRefreshToken(refreshToken: string) {
-    const cookieRefreshJwtKey = this.configService.get(
-      EnvironmentConstants.COOKIE_REFRESH_JWT_KEY,
-    );
-    const cookieRefreshExpiresIn = +this.configService.get(
-      EnvironmentConstants.JWT_REFRESH_EXPIRES_IN,
-    );
-    return `${cookieRefreshJwtKey}=${refreshToken}; HttpOnly; Path=/; Max-Age=${cookieRefreshExpiresIn}`;
-  }
-
-  getCookieForLogOut() {
-    const cookieJwtKey = this.configService.get(
-      EnvironmentConstants.COOKIE_JWT_KEY,
-    );
-    const cookieRefreshJwtKey = this.configService.get(
-      EnvironmentConstants.COOKIE_REFRESH_JWT_KEY,
-    );
-
-    return [
-      `${cookieJwtKey}=; HttpOnly; Path=/; Max-Age=0`,
-      `${cookieRefreshJwtKey}=; HttpOnly; Path=/; Max-Age=0`,
-    ];
+    // this.emailQueue.add(ProcessorType.VerificationEmail, { key: 'value' });
+    return user;
   }
 
   logout(user: UserEntity) {

@@ -1,19 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
+import { Cache } from 'cache-manager';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
 import { UserEntity } from 'src/features/users/entities/user.entity';
 import { MoreThanOrEqual, Repository } from 'typeorm';
-import { RefreshTokenEntity } from './entities/refresh-token.entity';
+import { RefreshTokenEntity } from '../entities/refresh-token.entity';
 
 @Injectable()
-export class RefreshTokenService {
+export class TokenService {
   constructor(
     @InjectRepository(RefreshTokenEntity)
     private refreshTokenRepository: Repository<RefreshTokenEntity>,
     private configService: ConfigService,
+    private jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
   ) {}
+
   async upsertToken(refresh_token: string, user: UserEntity) {
     const expirationTime = new Date();
     const tokenExpirationTimeInSecodns = +this.configService.get(
@@ -34,7 +40,8 @@ export class RefreshTokenService {
     );
     return tokenInstance;
   }
-  remove(user: UserEntity) {
+
+  removeRefreshToken(user: UserEntity) {
     return this.refreshTokenRepository.delete({ user: { id: user.id } });
   }
 
@@ -47,5 +54,33 @@ export class RefreshTokenService {
       },
     });
     return tokenFromDB && tokenFromDB.isTokenMatch(token);
+  }
+
+  getAccessToken(user: UserEntity) {
+    const access_token = this.jwtService.sign({ id: user.id });
+    const jwt_access_expiration_time = this.configService.get<number>(
+      EnvironmentConstants.JWT_EXPIRES_IN,
+    );
+    const cacheKey = this.configService.get(
+      EnvironmentConstants.USER_TOKEN_CACHE_KEY,
+    );
+    this.cacheService.set(`${cacheKey}:${user.id}`, access_token, {
+      ttl: jwt_access_expiration_time,
+    } as any);
+    return access_token;
+  }
+
+  async getRefreshToken(user: UserEntity) {
+    const refresh_token = this.jwtService.sign(
+      { id: user.id },
+      {
+        secret: this.configService.get(EnvironmentConstants.JWT_REFRESH_SECRET),
+        expiresIn: this.configService.get(
+          EnvironmentConstants.JWT_REFRESH_EXPIRES_IN,
+        ),
+      },
+    );
+    await this.upsertToken(refresh_token, user);
+    return refresh_token;
   }
 }

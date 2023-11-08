@@ -8,11 +8,13 @@ import { QueueConstants } from 'src/common/constants/queue.constants';
 import { EmailModule } from 'src/features/email/email.module';
 import { UsersModule } from 'src/features/users/users.module';
 import { AuthenticationController } from './authentication.controller';
-import { AuthenticationService } from './authentication.service';
 import { PasswordResetTokenEntity } from './entities/password-reset-token.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
+import { VerificationCodeEntity } from './entities/verification-code.entity';
 import { AuthEmailProcessor } from './processor/email.processor';
-import { RefreshTokenService } from './refresh-token.service';
+import { AuthenticationService } from './services/authentication.service';
+import { CookieService } from './services/cookie.service';
+import { TokenService } from './services/token.service';
 import { JwtRefreshTokenStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
@@ -31,18 +33,23 @@ import { LocalStrategy } from './strategies/local.strategy';
         signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') },
       }),
     }),
-    TypeOrmModule.forFeature([RefreshTokenEntity, PasswordResetTokenEntity]),
+    TypeOrmModule.forFeature([
+      RefreshTokenEntity,
+      PasswordResetTokenEntity,
+      VerificationCodeEntity,
+    ]),
     BullModule.registerQueue({
-      name: QueueConstants.emailQueue,
+      name: QueueConstants.AuthEmailQueue,
     }),
   ],
   controllers: [AuthenticationController],
   providers: [
     AuthenticationService,
+    CookieService,
     LocalStrategy,
     JwtStrategy,
     JwtRefreshTokenStrategy,
-    RefreshTokenService,
+    TokenService,
     AuthEmailProcessor,
   ],
 })

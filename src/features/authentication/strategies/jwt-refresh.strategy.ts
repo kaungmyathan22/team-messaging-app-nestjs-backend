@@ -5,7 +5,7 @@ import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
 import { UsersService } from 'src/features/users/users.service';
-import { RefreshTokenService } from '../refresh-token.service';
+import { TokenService } from '../services/token.service';
 
 @Injectable()
 export class JwtRefreshTokenStrategy extends PassportStrategy(
@@ -14,7 +14,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
 ) {
   constructor(
     private readonly configService: ConfigService,
-    private readonly refreshTokenService: RefreshTokenService,
+    private readonly tokenService: TokenService,
     private readonly userService: UsersService,
   ) {
     super({
@@ -37,7 +37,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
 
   async validate(request: Request, payload: JwtPayload) {
     const refreshToken = request.cookies?.Refresh;
-    const isTokenValid = await this.refreshTokenService.isRefreshTokenValid(
+    const isTokenValid = await this.tokenService.isRefreshTokenValid(
       payload.id,
       refreshToken,
     );

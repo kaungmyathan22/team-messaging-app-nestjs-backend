@@ -18,12 +18,7 @@ export class UsersService {
     try {
       const user = await this.userRepository.create(createUserDto);
       await this.userRepository.save(user);
-      this.emailService.sendEmail({
-        to: user.email,
-        subject: 'Email Confirmation',
-        template: 'confirmation',
-        context: {},
-      });
+
       return user;
     } catch (error) {
       if (error.code === '23505') {
