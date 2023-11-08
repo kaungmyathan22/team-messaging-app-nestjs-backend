@@ -1,3 +1,5 @@
+import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -40,6 +42,10 @@ import { LocalStrategy } from './strategies/local.strategy';
     ]),
     BullModule.registerQueue({
       name: QueueConstants.AuthEmailQueue,
+    }),
+    BullBoardModule.forFeature({
+      name: QueueConstants.AuthEmailQueue,
+      adapter: BullAdapter,
     }),
   ],
   controllers: [AuthenticationController],
