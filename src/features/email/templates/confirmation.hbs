@@ -1,38 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Email Confirmation</title>
-        <style>
-            /* Your email styles here */
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f4;
-            }
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Email Confirmation</title>
+    <style>
+      /* Your email styles here */ body { font-family: Arial, sans-serif;
+      background-color: #f4f4f4; } .container { max-width: 600px; margin: 0
+      auto; padding: 20px; background-color: #fff; border-radius: 5px; } h1 {
+      color: #333; }
 
-            .container {
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: #fff;
-                border-radius: 5px;
-            }
+    </style>
+  </head>
 
-            h1 {
-                color: #333;
-            }
-
-        </style>
-    </head>
-
-    <body>
-        <div class="container">
-            <h1>Email Confirmation</h1>
-            <p>Click the button below to confirm your email:</p>
-            <a href="{{ confirmationLink }}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px;">Confirm Email</a>
-        </div>
-    </body>
+  <body>
+    <div class='container'>
+      <h1>Email Confirmation</h1>
+      <p>Click the button below to confirm your email:</p>
+      <p
+        href='{{confirmationLink}}'
+        style='display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px;'
+      >Confirm Email</p>
+    </div>
+  </body>
 
 </html>

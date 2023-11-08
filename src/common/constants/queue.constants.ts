@@ -1,3 +1,3 @@
 export const QueueConstants = {
-  emailQueue: 'emailQueue',
+  AuthEmailQueue: 'AuthEmailQueue',
 };
