@@ -1,6 +1,9 @@
+import { InjectQueue } from '@nestjs/bull';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -9,19 +12,23 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
-
+import { Queue } from 'bull';
 import { Cache } from 'cache-manager';
+import Hashids from 'hashids';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
+import { ProcessorType } from 'src/common/constants/process.constants';
+import { QueueConstants } from 'src/common/constants/queue.constants';
 import { EmailService } from 'src/features/email/email.service';
 import { ChangePasswordDTO } from 'src/features/users/dto/change-password.dto';
 import { UserEntity } from 'src/features/users/entities/user.entity';
 import { UsersService } from 'src/features/users/users.service';
 import { StringUtils } from 'src/utils/string';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { ForgotPasswordDTO } from '../dto/fogot-password.dto';
 import { RegisterDTO } from '../dto/register.dto';
 import { ResetPasswordDTO } from '../dto/reset-password.dto';
 import { PasswordResetTokenEntity } from '../entities/password-reset-token.entity';
+import { VerificationCodeEntity } from '../entities/verification-code.entity';
 
 @Injectable()
 export class AuthenticationService {
@@ -31,9 +38,12 @@ export class AuthenticationService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    // @InjectQueue(QueueConstants.AuthEmailQueue) private emailQueue: Queue,
+    @InjectQueue(QueueConstants.AuthEmailQueue) private emailQueue: Queue,
     @InjectRepository(PasswordResetTokenEntity)
     private passwordResetTokenRepository: Repository<PasswordResetTokenEntity>,
+    @InjectRepository(VerificationCodeEntity)
+    private verificationCodeRepository: Repository<VerificationCodeEntity>,
+    private readonly entityManager: EntityManager,
   ) {}
 
   authenticate(email: string, password: string) {
@@ -45,8 +55,7 @@ export class AuthenticationService {
   // this.bullService.
   async register(payload: RegisterDTO) {
     const user = await this.userService.create(payload);
-
-    // this.emailQueue.add(ProcessorType.VerificationEmail, { key: 'value' });
+    this.emailQueue.add(ProcessorType.VerificationEmail, { user });
     return user;
   }
 
@@ -168,6 +177,53 @@ export class AuthenticationService {
     } catch (error) {
       console.log(error);
       throw new UnauthorizedException('Passwrod reset link expired');
+    }
+  }
+
+  async verifyEmail(token: string) {
+    try {
+      const hashIdsSecret = this.configService.get(
+        EnvironmentConstants.HASH_IDS_SECRET,
+      );
+      const hashids = new Hashids(hashIdsSecret, 10);
+
+      const decodedPayload: EmailConfirmationPayload = this.jwtService.verify(
+        token,
+        {
+          secret: this.configService.get(
+            EnvironmentConstants.CONFIRM_EMAIL_TOKEN_SECRET,
+          ),
+        },
+      );
+      const code = decodedPayload.flag;
+      const userId = hashids.decode(decodedPayload.usub)[0] as number;
+      const id = hashids.decode(decodedPayload.sub)[0] as number;
+
+      const [user, verification] = await Promise.all([
+        this.userService.findOne(userId),
+        this.verificationCodeRepository.findOne({
+          where: {
+            id: id,
+            code,
+            user: {
+              id: userId,
+            },
+          },
+        }),
+      ]);
+      if (!user || !verification) {
+        throw new Error();
+      }
+      await this.entityManager.transaction(async () => {
+        await this.verificationCodeRepository.remove(verification);
+        await this.userService.updateVerificationStatus(user, true);
+      });
+      return { message: 'Email verification successful.' };
+    } catch (error) {
+      throw new HttpException(
+        'Invalid confirmation link',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 }

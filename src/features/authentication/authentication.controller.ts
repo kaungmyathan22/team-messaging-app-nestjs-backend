@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -115,5 +116,11 @@ export class AuthenticationController {
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() payload: ResetPasswordDTO) {
     return this.authenticationService.resetPassword(payload);
+  }
+
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Query('token') token: string) {
+    return this.authenticationService.verifyEmail(token);
   }
 }

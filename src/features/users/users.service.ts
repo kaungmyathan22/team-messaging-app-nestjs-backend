@@ -96,4 +96,9 @@ export class UsersService {
     user.password = newPassword;
     return this.userRepository.save(user);
   }
+
+  async updateVerificationStatus(user: UserEntity, status: boolean) {
+    user.verified = status;
+    return this.userRepository.save(user);
+  }
 }
