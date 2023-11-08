@@ -5,12 +5,13 @@ import * as redisStore from 'cache-manager-redis-store';
 import * as joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthenticationModule } from './authentication/authentication.module';
+import { AuthenticationModule } from './features/authentication/authentication.module';
 import { CookieMiddleware } from './common/middlewares/cookie.middleware';
 import { DatabaseModule } from './database/database.module';
-import { EmailModule } from './email/email.module';
+import { EmailModule } from './features/email/email.module';
 import { QueueModule } from './queue/queue.module';
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './features//users/users.module';
+import { ChatModule } from './features/chat/chat.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { UsersModule } from './users/users.module';
     }),
     EmailModule,
     QueueModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

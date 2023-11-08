@@ -6,7 +6,7 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import JwtAuthenticationGuard from 'src/authentication/guards/jwt.guard';
+import JwtAuthenticationGuard from 'src/features/authentication/guards/jwt.guard';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
