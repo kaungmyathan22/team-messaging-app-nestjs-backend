@@ -15,6 +15,7 @@ import { ChangePasswordDTO } from 'src/features/users/dto/change-password.dto';
 import { UserEntity } from 'src/features/users/entities/user.entity';
 import { ForgotPasswordDTO } from './dto/fogot-password.dto';
 import { RegisterDTO } from './dto/register.dto';
+import { ResendVerificationEmailPayload } from './dto/resend-verification-email.dto';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
 import JwtRefreshAuthenticationGuard from './guards/jwt-refresh.guard';
 import JwtAuthenticationGuard from './guards/jwt.guard';
@@ -122,5 +123,11 @@ export class AuthenticationController {
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Query('token') token: string) {
     return this.authenticationService.verifyEmail(token);
+  }
+
+  @Post('resend-verification-email')
+  @HttpCode(HttpStatus.OK)
+  async resendVerifyEmail(@Body() payload: ResendVerificationEmailPayload) {
+    return this.authenticationService.resendVerifyEmail(payload);
   }
 }

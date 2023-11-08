@@ -98,7 +98,6 @@ export class UsersService {
   }
 
   async updateVerificationStatus(user: UserEntity, status: boolean) {
-    user.verified = status;
-    return this.userRepository.save(user);
+    return this.update(user.id, { verified: status } as any);
   }
 }

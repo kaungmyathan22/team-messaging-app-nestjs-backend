@@ -26,6 +26,7 @@ import { StringUtils } from 'src/utils/string';
 import { EntityManager, Repository } from 'typeorm';
 import { ForgotPasswordDTO } from '../dto/fogot-password.dto';
 import { RegisterDTO } from '../dto/register.dto';
+import { ResendVerificationEmailPayload } from '../dto/resend-verification-email.dto';
 import { ResetPasswordDTO } from '../dto/reset-password.dto';
 import { PasswordResetTokenEntity } from '../entities/password-reset-token.entity';
 import { VerificationCodeEntity } from '../entities/verification-code.entity';
@@ -220,10 +221,29 @@ export class AuthenticationService {
       });
       return { message: 'Email verification successful.' };
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         'Invalid confirmation link',
         HttpStatus.UNAUTHORIZED,
       );
     }
+  }
+
+  async resendVerifyEmail({ email }: ResendVerificationEmailPayload) {
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new HttpException(
+        'User not found with this email address.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    if (user.verified) {
+      throw new HttpException(
+        'User email is already verified.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    this.emailQueue.add(ProcessorType.VerificationEmail, { user });
+    return user;
   }
 }

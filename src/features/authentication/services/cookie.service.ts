@@ -1,6 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
 
+@Injectable()
 export class CookieService {
   constructor(private readonly configService: ConfigService) {}
   getCookieWithJwtToken(token: string) {
