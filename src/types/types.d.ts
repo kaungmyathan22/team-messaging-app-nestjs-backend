@@ -7,3 +7,9 @@ declare namespace Express {
     user?: any;
   }
 }
+
+type EmailConfirmationPayload = {
+  sub: string;
+  usub: string;
+  flag: string;
+};

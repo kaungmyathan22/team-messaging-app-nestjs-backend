@@ -1,6 +1,6 @@
 export class EmailPayload {
   to: string;
   subject: string;
-  template: string;
+  template: 'confirmation' | 'forgot-password' | 'welcome';
   context: Record<string, string>;
 }
