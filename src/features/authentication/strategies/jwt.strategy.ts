@@ -6,7 +6,7 @@ import { Cache } from 'cache-manager';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from 'src/features/users/users.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

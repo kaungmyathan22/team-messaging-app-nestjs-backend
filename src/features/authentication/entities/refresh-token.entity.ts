@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcryptjs';
-import { UserEntity } from 'src/users/entities/user.entity';
+import { UserEntity } from 'src/features/users/entities/user.entity';
 import {
   Column,
   Entity,

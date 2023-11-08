@@ -10,8 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ChangePasswordDTO } from 'src/users/dto/change-password.dto';
-import { UserEntity } from 'src/users/entities/user.entity';
+import { ChangePasswordDTO } from 'src/features/users/dto/change-password.dto';
+import { UserEntity } from 'src/features/users/entities/user.entity';
 import { AuthenticationService } from './authentication.service';
 import { ForgotPasswordDTO } from './dto/fogot-password.dto';
 import { RegisterDTO } from './dto/register.dto';

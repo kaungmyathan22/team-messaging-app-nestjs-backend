@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
-import { UserEntity } from 'src/users/entities/user.entity';
+import { UserEntity } from 'src/features/users/entities/user.entity';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 
