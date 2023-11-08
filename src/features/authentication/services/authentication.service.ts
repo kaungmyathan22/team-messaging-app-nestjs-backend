@@ -174,7 +174,7 @@ export class AuthenticationService {
         this.userService.updatePassword(newPassword, user),
         this.passwordResetTokenRepository.remove(resetTokenInstance),
       ]);
-      return { success: true, resetTokenInstance };
+      return { success: true };
     } catch (error) {
       console.log(error);
       throw new UnauthorizedException('Passwrod reset link expired');
