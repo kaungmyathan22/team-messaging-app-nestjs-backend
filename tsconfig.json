@@ -18,5 +18,25 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@user/*": [
+        "src/features/users/*"
+      ],
+      "@auth/*": [
+        "src/features/authentication/*"
+      ],
+      "@email/*": [
+        "src/features/email/*"
+      ],
+      "@chat/*": [
+        "src/features/chat/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@common/*": [
+        "src/common/*"
+      ],
+    }
   }
 }
