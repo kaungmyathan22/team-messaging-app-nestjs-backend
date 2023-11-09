@@ -53,7 +53,7 @@ export class AuthenticationService {
       password,
     });
   }
-  // this.bullService.
+
   async register(payload: RegisterDTO) {
     const user = await this.userService.create(payload);
     this.emailQueue.add(ProcessorType.VerificationEmail, { user });
@@ -216,8 +216,10 @@ export class AuthenticationService {
         throw new Error();
       }
       await this.entityManager.transaction(async () => {
-        await this.verificationCodeRepository.remove(verification);
-        await this.userService.updateVerificationStatus(user, true);
+        await Promise.all([
+          this.verificationCodeRepository.remove(verification),
+          this.userService.updateVerificationStatus(user, true),
+        ]);
       });
       return { message: 'Email verification successful.' };
     } catch (error) {
