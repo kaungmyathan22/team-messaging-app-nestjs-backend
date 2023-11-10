@@ -11,4 +11,6 @@ export class MessageEntity {
   content_type: string;
   @ManyToOne(() => ParticipantEntity, { onDelete: 'CASCADE' })
   participant: ParticipantEntity;
+  @Column({ nullable: true })
+  participantId: number;
 }

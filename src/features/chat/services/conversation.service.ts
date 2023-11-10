@@ -7,11 +7,12 @@ import {
   ConversationType,
 } from '@chat/entities/conversation.entity';
 import { ParticipantEntity } from '@chat/entities/participant.entity';
+import { PaginatedParamsDto } from '@common/dto/paginated-query.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '@user/entities/user.entity';
 import { UsersService } from '@user/users.service';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ConversationService {
@@ -117,24 +118,48 @@ export class ConversationService {
     };
   }
 
-  async getConversations(user: UserEntity) {
-    const conversationIds = await this.participantRepository
-      .createQueryBuilder('participant')
-      .select('"conversationId"')
-      .where('"userId" = :userId', { userId: user.id })
-      .getRawMany();
+  async getConversations(
+    user: UserEntity,
+    { page, pageSize }: PaginatedParamsDto,
+  ) {
+    const skip = (page - 1) * pageSize;
 
-    const conversations = await this.conversationRepository.find({
-      where: {
-        id: In(
-          conversationIds.map(
-            ({ conversationId }) => conversationId,
-          ) as number[],
-        ),
-      },
-      relations: ['participants'], // Assuming 'participants' is the name of the relation in ConversationEntity
-    });
-
-    return conversations;
+    const totalItems = await this.conversationRepository
+      .createQueryBuilder('conversation')
+      .where(
+        'conversation.id IN (' +
+          'SELECT "conversationId" FROM participant_entity WHERE "userId" = :userId' +
+          ')',
+        { userId: user.id },
+      )
+      .getCount();
+    const qb = this.conversationRepository.createQueryBuilder('conversation');
+    const data = await this.conversationRepository
+      .createQueryBuilder('conversation')
+      .leftJoinAndSelect('conversation.participants', 'participants')
+      .leftJoinAndSelect('participants.user', 'participantUser')
+      .where(
+        'conversation.id IN ' +
+          qb
+            .subQuery()
+            .select('participant_entity.conversationId')
+            .from(ParticipantEntity, 'participant_entity')
+            .where('participant_entity.userId = :userId')
+            .getQuery(),
+      )
+      .setParameter('userId', user.id)
+      .skip(skip)
+      .take(pageSize)
+      .getMany();
+    const totalPages = Math.ceil(totalItems / pageSize);
+    return {
+      prevPage: page > 1 ? page - 1 : null,
+      nextPage: page >= totalPages ? null : +page + 1,
+      totalPages,
+      totalItems,
+      page,
+      pageSize,
+      data,
+    };
   }
 }
