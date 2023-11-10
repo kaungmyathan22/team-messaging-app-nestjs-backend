@@ -13,12 +13,12 @@ import { ConversationEntity } from './conversation.entity';
 export class ParticipantEntity {
   @PrimaryGeneratedColumn()
   id: number;
-  @ManyToOne(() => ConversationEntity)
+  @ManyToOne(() => ConversationEntity, { onDelete: 'CASCADE' })
   conversation: ConversationEntity;
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   user: UserEntity;
-  @Column()
+  @Column({ default: 0 })
   read: number;
-  @Column()
+  @Column({ nullable: true })
   nickName: string;
 }

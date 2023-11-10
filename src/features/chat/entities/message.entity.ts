@@ -9,6 +9,6 @@ export class MessageEntity {
   content: string;
   @Column()
   content_type: string;
-  @ManyToOne(() => ParticipantEntity)
+  @ManyToOne(() => ParticipantEntity, { onDelete: 'CASCADE' })
   participant: ParticipantEntity;
 }

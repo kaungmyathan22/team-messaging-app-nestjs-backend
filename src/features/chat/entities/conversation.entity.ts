@@ -1,5 +1,11 @@
 import { UserEntity } from '@user/entities/user.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ParticipantEntity } from './participant.entity';
 
 export enum ConversationType {
@@ -11,9 +17,16 @@ export enum ConversationType {
 export class ConversationEntity {
   @PrimaryGeneratedColumn()
   id: number;
+
   @Column()
   type: ConversationType;
+
+  @Column()
+  name: string;
+
+  @ManyToOne(() => UserEntity)
   admin: UserEntity;
+
   @OneToMany(
     () => ParticipantEntity,
     (pariticipant) => pariticipant.conversation,

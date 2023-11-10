@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EmailService } from 'src/features/email/email.service';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AuthenticateDTO } from './dto/authenticate.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,7 +11,6 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private readonly emailService: EmailService,
   ) {}
   async create(createUserDto: CreateUserDto) {
     try {
@@ -99,5 +97,10 @@ export class UsersService {
 
   async updateVerificationStatus(user: UserEntity, status: boolean) {
     return this.update(user.id, { verified: status } as any);
+  }
+
+  async findByIds(ids: number[]) {
+    const users = await this.userRepository.findBy({ id: In(ids) });
+    return users;
   }
 }
