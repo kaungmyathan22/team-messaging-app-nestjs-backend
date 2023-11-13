@@ -1,13 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import JwtAuthenticationGuard from 'src/features/authentication/guards/jwt.guard';
 import { CurrentUser } from 'src/common/decorators/current-user';
+import JwtAuthenticationGuard from 'src/features/authentication/guards/jwt.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -16,6 +17,11 @@ import { UsersService } from './users.service';
 @UseGuards(JwtAuthenticationGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+  @Get()
+  getUsers() {
+    return this.usersService.findAll();
+  }
+
   @Patch('my-profile')
   updateMyProfile(
     @Body() updateUserDto: UpdateUserDto,

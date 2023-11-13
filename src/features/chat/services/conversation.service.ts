@@ -82,7 +82,6 @@ export class ConversationService {
       })
       .getRawMany();
     if (conversationIds.length > 0) {
-      console.log(conversationIds);
       const conversations = await this.conversationRepository
         .createQueryBuilder('conversation')
         .where('"id" IN (:...conversationIds)', {

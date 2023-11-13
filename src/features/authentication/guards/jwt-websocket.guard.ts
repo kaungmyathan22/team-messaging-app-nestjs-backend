@@ -8,7 +8,11 @@ export class JwtWebSocketGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean | Promise<boolean> {
     const client = context.switchToWs().getClient();
     const token = client.handshake.query.token;
-
+    const _token = client.handshake.headers.cookie
+      .split(';')
+      .find((cookie) => cookie.trim().startsWith('authorization='))
+      ?.split('=')[1];
+    console.log({ _token });
     if (!token) {
       return false;
     }

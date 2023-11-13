@@ -27,10 +27,6 @@ export class AuthEmailProcessor {
   ) {}
   @Process(ProcessorType.ForgotPassword)
   async handleSendForgotPasswordEmail(job: Job) {
-    console.log('====================================');
-    console.log(job);
-    console.log('Hola');
-    console.log('====================================');
     job.finished();
   }
 

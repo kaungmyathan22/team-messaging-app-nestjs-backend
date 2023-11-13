@@ -58,5 +58,6 @@ import { LocalStrategy } from './strategies/local.strategy';
     TokenService,
     AuthEmailProcessor,
   ],
+  exports: [TokenService],
 })
 export class AuthenticationModule {}

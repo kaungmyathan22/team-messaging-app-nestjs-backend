@@ -50,18 +50,11 @@ import { EmailModule } from './features/email/email.module';
       isGlobal: true,
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        console.log({
-          store: 'redis',
-          host: configService.get('REDIS_HOST'),
-          port: configService.get('REDIS_PORT'),
-        });
-        return {
-          store: redisStore,
-          host: configService.get('REDIS_HOST'),
-          port: configService.get('REDIS_PORT'),
-        };
-      },
+      useFactory: (configService: ConfigService) => ({
+        store: redisStore,
+        host: configService.get('REDIS_HOST'),
+        port: configService.get('REDIS_PORT'),
+      }),
     }),
     EmailModule,
     ChatModule,

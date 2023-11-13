@@ -1,3 +1,4 @@
+import { AuthenticationModule } from '@auth/authentication.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -22,6 +23,7 @@ import { MessageService } from './services/message.service';
         signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') },
       }),
     }),
+    AuthenticationModule,
     UsersModule,
     TypeOrmModule.forFeature([
       ConversationEntity,

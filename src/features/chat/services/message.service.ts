@@ -1,8 +1,9 @@
 import { SendMessagePayload } from '@chat/dto/message-dto/send-message.dto';
 import { MessageEntity } from '@chat/entities/message.entity';
 import { ParticipantEntity } from '@chat/entities/participant.entity';
+import { ChatGateway } from '@chat/gateway/chat.gateway';
 import { PaginatedParamsDto } from '@common/dto/paginated-query.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '@user/entities/user.entity';
 import { MiscUtils } from '@utils/misc';
@@ -15,6 +16,8 @@ export class MessageService {
     private readonly participantRepository: Repository<ParticipantEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
+    @Inject(ChatGateway)
+    private readonly chatGateway: ChatGateway,
   ) {}
   async getParticipantByConversationIdOrFail(
     conversationId: number,
@@ -46,16 +49,21 @@ export class MessageService {
       user.id,
     );
     const message = this.messageRepository.create({
-      participant,
+      sender: participant,
       content,
       content_type: type,
+      conversation: {
+        id: conversationId,
+      },
     });
     await this.messageRepository.save(message);
     participant.read = message.id;
     await this.participantRepository.save(participant);
+    this.chatGateway.newMessageEvent(message, conversationId);
     return {
       ...message,
-      participant: undefined,
+      sender: undefined,
+      conversation: undefined,
     };
   }
   async getMessages(
@@ -67,21 +75,19 @@ export class MessageService {
       conversationId,
       user.id,
     );
+    console.log({ participant });
     const skip = (page - 1) * pageSize;
+    const where = {
+      conversation: {
+        id: conversationId,
+      },
+    };
     const [totalItems, data] = await Promise.all([
       this.messageRepository.count({
-        where: {
-          participant: {
-            id: participant.id,
-          },
-        },
+        where,
       }),
       this.messageRepository.find({
-        where: {
-          participant: {
-            id: participant.id,
-          },
-        },
+        where,
         take: pageSize,
         skip,
         order: {
@@ -90,8 +96,6 @@ export class MessageService {
       }),
     ]);
     const meta = MiscUtils.getPaginationMeta({ page, pageSize, totalItems });
-    console.log(JSON.stringify(data));
-
     return {
       ...meta,
       data,

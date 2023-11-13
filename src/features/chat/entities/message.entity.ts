@@ -1,4 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { ConversationEntity } from './conversation.entity';
 import { ParticipantEntity } from './participant.entity';
 
 @Entity()
@@ -9,8 +10,12 @@ export class MessageEntity {
   content: string;
   @Column()
   content_type: string;
-  @ManyToOne(() => ParticipantEntity, { onDelete: 'CASCADE' })
-  participant: ParticipantEntity;
+  @ManyToOne(() => ParticipantEntity, { onDelete: 'CASCADE', nullable: false })
+  sender: ParticipantEntity;
   @Column({ nullable: true })
-  participantId: number;
+  senderId: number;
+  @ManyToOne(() => ConversationEntity, { onDelete: 'CASCADE', nullable: false })
+  conversation: ConversationEntity;
+  @Column({ nullable: false })
+  conversationId: number;
 }

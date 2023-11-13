@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UsersService } from '@user/users.service';
 import * as bcrypt from 'bcryptjs';
 import { Cache } from 'cache-manager';
 import { EnvironmentConstants } from 'src/common/constants/environment.constants';
@@ -17,8 +18,27 @@ export class TokenService {
     private refreshTokenRepository: Repository<RefreshTokenEntity>,
     private configService: ConfigService,
     private jwtService: JwtService,
+    private userService: UsersService,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
   ) {}
+
+  async validateAccessToken(token: string) {
+    try {
+      const payload = this.jwtService.verify(token);
+      const cacheKey = this.configService.get(
+        EnvironmentConstants.USER_TOKEN_CACHE_KEY,
+      );
+      const token_from_cache = await this.cacheService.get(
+        `${cacheKey}:${payload.id}`,
+      );
+      if (token_from_cache && token_from_cache === token) {
+        return this.userService.findOne(payload.id);
+      }
+    } catch (error) {
+      console.log(error);
+      throw new Error('Invalid token');
+    }
+  }
 
   async upsertToken(refresh_token: string, user: UserEntity) {
     const expirationTime = new Date();
